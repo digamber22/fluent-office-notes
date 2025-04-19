@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { api } from '../utils/api';
-import { Meeting } from '../utils/mockData';
+import { api, Meeting } from '../utils/api'; // Import Meeting from api.ts
 
 interface MeetingListProps {
   refreshTrigger?: number;
@@ -31,8 +30,9 @@ const MeetingList: React.FC<MeetingListProps> = ({ refreshTrigger }) => {
     fetchMeetings();
   }, [refreshTrigger]);
 
+  // Filter based on filename now
   const filteredMeetings = meetings.filter(meeting => 
-    meeting.title.toLowerCase().includes(searchTerm.toLowerCase())
+    meeting.filename.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -60,15 +60,23 @@ const MeetingList: React.FC<MeetingListProps> = ({ refreshTrigger }) => {
     );
   }
 
-  const formatDate = (dateString: string) => {
+  // Updated formatDate to handle ISO string from upload_time
+  const formatDate = (isoString: string) => {
+    if (!isoString) return 'Date unavailable'; // Handle cases where date might be null/undefined
     const options: Intl.DateTimeFormatOptions = {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: true // Optional: Use 12-hour format
     };
-    return new Date(dateString).toLocaleDateString(undefined, options);
+    try {
+      return new Date(isoString).toLocaleDateString(undefined, options);
+    } catch (e) {
+      console.error("Error formatting date:", isoString, e);
+      return 'Invalid date';
+    }
   };
 
   return (
@@ -111,8 +119,9 @@ const MeetingList: React.FC<MeetingListProps> = ({ refreshTrigger }) => {
                 className="flex justify-between items-start"
               >
                 <div>
-                  <div className="font-medium text-gray-800">{meeting.title}</div>
-                  <div className="text-sm text-gray-500 mt-1">{formatDate(meeting.date)}</div>
+                  {/* Use filename and upload_time */}
+                  <div className="font-medium text-gray-800">{meeting.filename}</div>
+                  <div className="text-sm text-gray-500 mt-1">{formatDate(meeting.upload_time)}</div>
                 </div>
                 <div className="text-blue-500">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">

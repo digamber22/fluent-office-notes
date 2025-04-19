@@ -14,20 +14,21 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ meetingId, summary }) => 
     // In a real implementation, this would trigger a file download
     // For now, we'll just simulate the download with the mock API
     const pdfUrl = api.exportPDF(meetingId);
-    
-    // In a real app, this might be:
-    // window.open(pdfUrl, '_blank');
-    // or
+
+    // Trigger the download by opening the URL in a new tab
+    window.open(pdfUrl, '_blank');
+
+    // Optional: Keep the alternative anchor tag method commented for reference
     // const a = document.createElement('a');
     // a.href = pdfUrl;
     // a.download = `meeting-${meetingId}.pdf`;
     // document.body.appendChild(a);
     // a.click();
     // document.body.removeChild(a);
-    
-    // For now, just show success message
-    setCopyStatus('PDF export initiated');
-    setTimeout(() => setCopyStatus(''), 3000);
+
+    // Show success message (optional, as the browser handles the download)
+    // setCopyStatus('PDF download started...');
+    // setTimeout(() => setCopyStatus(''), 3000);
   };
 
   const handleCopySummary = async () => {
