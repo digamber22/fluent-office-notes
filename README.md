@@ -1,22 +1,12 @@
-# Welcome to your Lovable project
-
-## Project info
-
-**URL**: https://lovable.dev/projects/3e8fbb5c-81cb-46d1-bb80-df2e8d564f8b
+# Project README
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/3e8fbb5c-81cb-46d1-bb80-df2e8d564f8b) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+If you want to work locally using your own IDE, you can clone this repo and push changes.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -35,6 +25,68 @@ npm i
 # Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
+
+## Local Deployment
+
+To run the full application locally, you need to set up both the Python backend and the React frontend.
+
+**Prerequisites:**
+
+*   [Node.js & npm](https://nodejs.org/) (or pnpm/yarn)
+*   [Python 3.x](https://www.python.org/) & pip
+
+**Backend Setup (FastAPI):**
+
+1.  **Navigate to the backend directory:**
+    ```bash
+    cd backend
+    ```
+2.  **Create and activate a virtual environment:**
+    *   On macOS/Linux:
+        ```bash
+        python3 -m venv venv
+        source venv/bin/activate
+        ```
+    *   On Windows:
+        ```bash
+        python -m venv venv
+        .\venv\Scripts\activate
+        ```
+3.  **Install Python dependencies:**
+    ```bash
+    pip install -r requirements.txt
+    ```
+4.  **(Optional) Create a `.env` file:**
+    The application might require environment variables. Create a `.env` file inside the `backend` directory based on any required configuration (e.g., database URL, API keys). Refer to `backend/app/config.py` if needed. *Note: `.env` is included in `.gitignore` and should not be committed.*
+5.  **Run the backend server:**
+    Navigate back to the `backend` directory if you are inside `backend/app`. The `main.py` is inside the `app` subdirectory.
+    ```bash
+    # Ensure you are in the 'backend' directory
+    uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
+    ```
+    The backend API should now be running on `http://localhost:8000`.
+
+**Frontend Setup (React/Vite):**
+
+1.  **Navigate to the project root directory (if you were in `backend`):**
+    ```bash
+    cd ..
+    ```
+2.  **Install Node.js dependencies:**
+    ```bash
+    npm install
+    # or pnpm install / yarn install
+    ```
+3.  **Run the frontend development server:**
+    ```bash
+    npm run dev
+    # or pnpm dev / yarn dev
+    ```
+    The frontend should now be running, typically on `http://localhost:5173` (check the terminal output for the exact URL), and will connect to the backend API running on port 8000.
+
+**Running Both:**
+
+Keep two terminals open: one running the backend server (`uvicorn`) and another running the frontend server (`npm run dev`). Access the application through the frontend URL provided by Vite.
 
 **Edit a file directly in GitHub**
 
@@ -59,15 +111,3 @@ This project is built with:
 - React
 - shadcn-ui
 - Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/3e8fbb5c-81cb-46d1-bb80-df2e8d564f8b) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
