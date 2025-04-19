@@ -1,14 +1,13 @@
-
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../utils/api';
 import { Meeting } from '../utils/mockData';
 
 interface MeetingListProps {
-  onSelectMeeting: (meetingId: string) => void;
-  refreshTrigger?: number; // Optional prop to trigger refresh from parent
+  refreshTrigger?: number;
 }
 
-const MeetingList: React.FC<MeetingListProps> = ({ onSelectMeeting, refreshTrigger }) => {
+const MeetingList: React.FC<MeetingListProps> = ({ refreshTrigger }) => {
   const [meetings, setMeetings] = useState<Meeting[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -30,9 +29,8 @@ const MeetingList: React.FC<MeetingListProps> = ({ onSelectMeeting, refreshTrigg
     };
 
     fetchMeetings();
-  }, [refreshTrigger]); // Re-fetch when refreshTrigger changes
+  }, [refreshTrigger]);
 
-  // Filter meetings based on search term
   const filteredMeetings = meetings.filter(meeting => 
     meeting.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -62,7 +60,6 @@ const MeetingList: React.FC<MeetingListProps> = ({ onSelectMeeting, refreshTrigg
     );
   }
 
-  // Format date function
   const formatDate = (dateString: string) => {
     const options: Intl.DateTimeFormatOptions = {
       year: 'numeric',
@@ -108,12 +105,11 @@ const MeetingList: React.FC<MeetingListProps> = ({ onSelectMeeting, refreshTrigg
       ) : (
         <ul className="divide-y max-h-[450px] overflow-y-auto">
           {filteredMeetings.map((meeting) => (
-            <li 
-              key={meeting.id} 
-              onClick={() => onSelectMeeting(meeting.id)}
-              className="p-4 hover:bg-gray-50 cursor-pointer transition-colors"
-            >
-              <div className="flex justify-between items-start">
+            <li key={meeting.id} className="p-4 hover:bg-gray-50 transition-colors">
+              <Link 
+                to={`/meetings/${meeting.id}`}
+                className="flex justify-between items-start"
+              >
                 <div>
                   <div className="font-medium text-gray-800">{meeting.title}</div>
                   <div className="text-sm text-gray-500 mt-1">{formatDate(meeting.date)}</div>
@@ -123,7 +119,7 @@ const MeetingList: React.FC<MeetingListProps> = ({ onSelectMeeting, refreshTrigg
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                   </svg>
                 </div>
-              </div>
+              </Link>
             </li>
           ))}
         </ul>
