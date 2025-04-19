@@ -1,41 +1,35 @@
 
 import React from 'react';
+import { Mic } from 'lucide-react';
 
 const Header: React.FC = () => {
   return (
-    <header className="bg-white shadow-sm py-4 px-6 mb-8">
-      <div className="container mx-auto flex justify-between items-center">
-        <div className="flex items-center">
-          <div className="text-blue-600 mr-3">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-8 w-8"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
-              />
-            </svg>
+    <header className="bg-gradient-to-r from-blue-500 to-indigo-600 shadow-lg py-6">
+      <div className="container mx-auto px-6">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <div className="p-2 bg-white/10 rounded-lg">
+              <Mic className="h-8 w-8 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-white">
+                Multilingual Note-Taking Agent
+              </h1>
+              <p className="text-blue-100 text-sm mt-1">
+                Transcribe, summarize, and extract action items from meetings
+              </p>
+            </div>
           </div>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Multilingual Note-Taking Agent</h1>
-            <p className="text-sm text-gray-500">Transcribe, summarize, and extract action items from meetings</p>
-          </div>
+          <nav>
+            <ul className="flex space-x-6">
+              <li>
+                <a href="/" className="text-blue-100 hover:text-white transition-colors">
+                  Home
+                </a>
+              </li>
+            </ul>
+          </nav>
         </div>
-        <nav>
-          <ul className="flex space-x-4">
-            <li>
-              <a href="/" className="text-blue-500 hover:text-blue-700">
-                Home
-              </a>
-            </li>
-          </ul>
-        </nav>
       </div>
     </header>
   );
