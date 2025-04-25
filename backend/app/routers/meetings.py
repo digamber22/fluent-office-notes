@@ -31,16 +31,18 @@ def process_meeting_audio(db_session_factory, meeting_id: int):
     db = db_session_factory() # Create a new session
     try:
         logger.info(f"Background task started for meeting {meeting_id}")
-        # 1. Transcribe
-        transcript = asr.transcribe_audio(db, meeting_id)
+        # 1. Transcribe (now returns transcript and language)
+        transcription_result = asr.transcribe_audio(db, meeting_id)
 
-        if transcript is None:
+        if transcription_result is None:
             logger.error(f"Transcription failed for meeting {meeting_id}. Aborting further processing.")
             # Status is already set to FAILED by transcribe_audio
             return
+        
+        transcript, detected_language = transcription_result # Unpack the result
 
-        # 2. Summarize (only if transcription succeeded)
-        summarization_result = summarizer.summarize_transcript(db, meeting_id, transcript)
+        # 2. Summarize (only if transcription succeeded, pass language)
+        summarization_result = summarizer.summarize_transcript(db, meeting_id, transcript, detected_language)
 
         if summarization_result is None:
             logger.error(f"Summarization failed for meeting {meeting_id}.")
@@ -124,8 +126,12 @@ async def upload_audio_meeting(
         finally:
             file.file.close() # Ensure file handle is closed
 
-        # 4. Update meeting record with the file path
-        crud.update_meeting(db, meeting_id, schemas.MeetingUpdate(audio_file_path=file_path))
+        # 4. Update meeting record with the file path and initialize action items to None
+        crud.update_meeting(db, meeting_id, schemas.MeetingUpdate(
+            audio_file_path=file_path,
+            action_items_en=None, # Explicitly set to None initially
+            action_items_zh=None  # Explicitly set to None initially
+        ))
 
         # 5. Add background task for processing
         # Pass the session factory, not the session itself
@@ -158,11 +164,14 @@ async def export_meeting_pdf(meeting_id: int, db: Session = Depends(get_db)):
          logger.warning(f"Exporting PDF for meeting {meeting_id} which is not in COMPLETED state (status: {db_meeting.status.value})")
          # raise HTTPException(status_code=400, detail=f"Meeting processing not complete (status: {db_meeting.status.value}). Cannot export PDF yet.")
 
-    try:
-        pdf_bytes = pdf_generator.generate_meeting_pdf(db_meeting)
-        if not pdf_bytes:
-             raise HTTPException(status_code=500, detail="PDF generation failed.")
+    pdf_bytes = pdf_generator.generate_meeting_pdf(db_meeting)
+    
+    # Check if PDF generation failed (returned empty bytes)
+    if not pdf_bytes:
+        logger.error(f"PDF generation returned empty bytes for meeting {meeting_id}.")
+        raise HTTPException(status_code=500, detail="PDF generation failed internally.")
 
+    try:
         # Create a streaming response
         return StreamingResponse(
             io.BytesIO(pdf_bytes),
@@ -187,3 +196,20 @@ async def search_meeting_transcripts(
 
     results = crud.search_transcripts(db=db, query=query)
     return results # Returns empty list if no results
+
+
+@router.delete("/{meeting_id}", status_code=204) # Use 204 No Content for successful deletion
+async def delete_meeting_endpoint(meeting_id: int, db: Session = Depends(get_db)):
+    """
+    Endpoint to delete a meeting by its ID.
+    Also handles deletion of the associated audio file.
+    """
+    logger.info(f"Received request to delete meeting {meeting_id}")
+    success = crud.delete_meeting(db=db, meeting_id=meeting_id)
+    if not success:
+        logger.error(f"Failed to delete meeting {meeting_id} (not found or error during deletion)")
+        raise HTTPException(status_code=404, detail="Meeting not found or failed to delete associated file.")
+    
+    logger.info(f"Successfully deleted meeting {meeting_id}")
+    # No content needs to be returned, status code 204 indicates success
+    return None # FastAPI handles the 204 response correctly when returning None

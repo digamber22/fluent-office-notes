@@ -1,4 +1,4 @@
-# Project README
+# LingoMate.AI - Project README
 
 ## How can I edit this code?
 

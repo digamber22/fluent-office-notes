@@ -2,65 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ==== Custom Theme Variables ==== */
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
-    --foreground: 0 0% 98%;
-    
+    --background: 0 0% 100%; /* White */
+    --foreground: 222 47% 11%; /* slate-900 */
+
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 222 47% 11%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 3.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 90%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --popover-foreground: 222 47% 11%;
+
+    --primary: 187 100% 38%; /* cyan-600 */
+    --primary-foreground: 210 40% 98%; /* slate-50 */
+
+    --secondary: 48 96% 53%; /* amber-400 */
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 210 40% 96%; /* slate-100 */
+    --muted-foreground: 215 20% 40%; /* slate-600 */
+
+    --accent: 187 100% 83%; /* cyan-100 */
+    --accent-foreground: 187 100% 25%; /* cyan-800 */
+
+    --destructive: 0 72% 51%; /* red-600 */
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 32% 90%; /* slate-200 */
+    --input: 215 32% 90%;
+    --ring: 187 100% 38%; /* cyan-600 */
+
     --radius: 0.75rem;
   }
 
-  body {
-    @apply bg-[#f8fafc] text-gray-800 antialiased;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, 
-                 Helvetica, Arial, sans-serif, "Apple Color Emoji", 
-                 "Segoe UI Emoji", "Segoe UI Symbol";
+  .dark {
+    --background: 222 47% 11%; /* slate-900 */
+    --foreground: 210 40% 98%; /* slate-50 - Keep this light foreground */
+
+    --card: 215 28% 17%; /* slate-800 */
+    --card-foreground: 210 40% 98%; /* slate-50 - Use light foreground for cards */
+
+    --popover: 215 28% 17%;
+    --popover-foreground: 210 40% 98%; /* slate-50 - Use light foreground for popovers */
+
+    --primary: 187 100% 38%; /* cyan-600 */
+    --primary-foreground: 210 40% 98%; /* slate-50 - Use light foreground for primary elements */
+
+    --secondary: 48 96% 53%; /* amber-400 */
+    --secondary-foreground: 222 47% 11%; /* slate-900 - Keep dark text on amber */
+
+    --muted: 215 28% 17%; /* slate-800 */
+    --muted-foreground: 215 20% 70%; /* slate-400 - Keep slightly muted light text */
+
+    --accent: 187 100% 38%; /* cyan-600 */
+    --accent-foreground: 210 40% 98%; /* slate-50 - Use light foreground for accent */
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 215 28% 17%;
+    --input: 215 28% 17%;
+    --ring: 187 100% 38%;
   }
 
-  .glass-panel {
-    @apply bg-white/90 backdrop-blur-sm border border-gray-100 shadow-lg rounded-2xl;
-  }
-
-  .heading-gradient {
-    @apply bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent;
-  }
-}
-
-@layer components {
-  .btn-primary {
-    @apply bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 py-2 rounded-lg
-           shadow-md hover:from-blue-600 hover:to-indigo-600 transition-all duration-200
-           focus:ring-2 focus:ring-blue-500 focus:ring-offset-2;
-  }
-
-  .card {
-    @apply bg-white rounded-xl shadow-md border border-gray-100 p-6 hover:shadow-lg transition-shadow;
-  }
-
-  .input-field {
-    @apply w-full px-4 py-2 rounded-lg border border-gray-200 focus:ring-2 focus:ring-blue-500 
-           focus:border-transparent outline-none transition-all duration-200;
-  }
-}
-
-@layer base {
   * {
     @apply border-border;
   }
@@ -69,8 +74,35 @@
     @apply bg-background text-foreground;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
   }
+
+  .glass-panel {
+    @apply bg-white/90 backdrop-blur-sm border border-gray-100 shadow-lg rounded-2xl;
+  }
+
+  .heading-gradient {
+    @apply bg-gradient-to-r from-cyan-600 to-amber-500 bg-clip-text text-transparent;
+  }
 }
 
+/* ==== Custom Components ==== */
+@layer components {
+  .btn-primary {
+    @apply bg-gradient-to-r from-cyan-600 to-cyan-500 text-white px-4 py-2 rounded-lg
+           shadow-md hover:from-cyan-700 hover:to-cyan-600 transition-all duration-200
+           focus:ring-2 focus:ring-cyan-500 focus:ring-offset-2;
+  }
+
+  .card {
+    @apply bg-card text-card-foreground rounded-xl shadow-md border border-border p-6 hover:shadow-lg transition-shadow;
+  }
+
+  .input-field {
+    @apply w-full px-4 py-2 rounded-lg border border-input bg-white text-foreground
+           focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none transition-all duration-200;
+  }
+}
+
+/* ==== Animation Keyframes ==== */
 @keyframes fade-in {
   from {
     opacity: 0;
@@ -84,7 +116,7 @@
   animation: fade-in 0.3s ease-in-out;
 }
 
-/* Override app width limit from App.css */
+/* ==== Layout Overrides ==== */
 #root {
   max-width: none;
   margin: 0;

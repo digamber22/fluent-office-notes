@@ -1,20 +1,33 @@
+import os 
+import logging 
+import json # Import json for serialization
 from sqlalchemy.orm import Session
 from . import models, schemas
 from typing import List, Optional
 
+# Configure logging for this module
+logger = logging.getLogger(__name__)
+
 # --- Meeting CRUD Operations ---
+
+# _parse_action_items removed - TypeDecorator handles this now
 
 def get_meeting(db: Session, meeting_id: int) -> Optional[models.Meeting]:
     """
-    Retrieve a single meeting by its ID.
+    Retrieve a single meeting by its ID. TypeDecorator handles JSON parsing.
     """
-    return db.query(models.Meeting).filter(models.Meeting.id == meeting_id).first()
+    db_meeting = db.query(models.Meeting).filter(models.Meeting.id == meeting_id).first()
+    # No need to call _parse_action_items
+    return db_meeting
+
 
 def get_meetings(db: Session, skip: int = 0, limit: int = 100) -> List[models.Meeting]:
     """
-    Retrieve a list of meetings with pagination.
+    Retrieve a list of meetings with pagination. TypeDecorator handles JSON parsing.
     """
-    return db.query(models.Meeting).offset(skip).limit(limit).all()
+    db_meetings = db.query(models.Meeting).offset(skip).limit(limit).all()
+    # No need to call _parse_action_items
+    return db_meetings
 
 def create_meeting(db: Session, meeting: schemas.MeetingCreate) -> models.Meeting:
     """
@@ -30,43 +43,88 @@ def create_meeting(db: Session, meeting: schemas.MeetingCreate) -> models.Meetin
     db.refresh(db_meeting)
     return db_meeting
 
+
+def delete_meeting(db: Session, meeting_id: int) -> bool:
+    """
+    Deletes a meeting record from the database and its associated audio file.
+    Returns True if deletion was successful, False otherwise.
+    """
+    db_meeting = get_meeting(db, meeting_id=meeting_id)
+    if not db_meeting:
+        return False # Meeting not found
+
+    audio_path = db_meeting.audio_file_path
+
+    try:
+        # Delete the database record first
+        db.delete(db_meeting)
+        db.commit()
+        logger.info(f"Deleted meeting record {meeting_id} from database.")
+
+        # If DB deletion is successful, attempt to delete the audio file
+        if audio_path and os.path.exists(audio_path):
+            try:
+                os.remove(audio_path)
+                logger.info(f"Deleted associated audio file: {audio_path}")
+            except OSError as e:
+                # Log the error but consider the DB deletion successful
+                logger.error(f"Error deleting audio file {audio_path} for meeting {meeting_id}: {e}", exc_info=True)
+                # Depending on requirements, you might want to return False here
+                # or have a separate mechanism for orphaned file cleanup.
+
+        return True # Indicate successful deletion of the DB record
+
+    except Exception as e:
+        db.rollback() # Rollback DB changes if any error occurs
+        logger.error(f"Error deleting meeting {meeting_id} from database: {e}", exc_info=True)
+        return False
+
 def update_meeting(db: Session, meeting_id: int, meeting_update: schemas.MeetingUpdate) -> Optional[models.Meeting]:
     """
     Update an existing meeting record.
-    Allows updating status, transcript, summary, action items, error message.
+    Handles serialization of action item lists to JSON strings.
     """
     db_meeting = get_meeting(db, meeting_id)
     if db_meeting:
-        update_data = meeting_update.model_dump(exclude_unset=True) # Get only provided fields
+        update_data = meeting_update.model_dump(exclude_unset=True) 
+        
+        # No need for manual JSON serialization here - TypeDecorator handles it
+            
         for key, value in update_data.items():
-            setattr(db_meeting, key, value)
+            # The TypeDecorator will handle action_items_en/zh automatically
+            setattr(db_meeting, key, value) 
+            
         db.commit()
         db.refresh(db_meeting)
     return db_meeting
 
 def update_meeting_status(db: Session, meeting_id: int, status: models.MeetingStatus, error_message: Optional[str] = None) -> Optional[models.Meeting]:
     """
-    Helper function to specifically update the status and optional error message of a meeting.
+    Helper function to specifically update the status and optional error message of a meeting,
+    avoiding issues with flushing other potentially unsaved list attributes.
     """
-    db_meeting = get_meeting(db, meeting_id)
-    if db_meeting:
-        db_meeting.status = status
-        db_meeting.error_message = error_message
+    try:
+        # Perform a targeted update query
+        update_values = {"status": status}
+        if error_message is not None: # Only include error_message if provided
+             update_values["error_message"] = error_message
+             
+        result = db.query(models.Meeting)\
+                   .filter(models.Meeting.id == meeting_id)\
+                   .update(update_values, synchronize_session=False) # synchronize_session=False is often safer for targeted updates
+                   
+        if result == 0: # Check if any row was updated
+             logger.warning(f"Meeting status update failed: No meeting found with ID {meeting_id}")
+             return None
+             
         db.commit()
-        db.refresh(db_meeting)
-    return db_meeting
-
-
-# Optional: Delete function if needed
-# def delete_meeting(db: Session, meeting_id: int) -> Optional[models.Meeting]:
-#     """
-#     Delete a meeting record by its ID.
-#     """
-#     db_meeting = get_meeting(db, meeting_id)
-#     if db_meeting:
-#         db.delete(db_meeting)
-#         db.commit()
-#     return db_meeting
+        # Fetch the updated meeting to return it (optional, but good practice)
+        # get_meeting no longer needs parsing, TypeDecorator handles it
+        return get_meeting(db, meeting_id) 
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error updating meeting status for ID {meeting_id}: {e}", exc_info=True)
+        return None
 
 # --- Search Functionality (Basic Example) ---
 

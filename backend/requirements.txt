@@ -7,7 +7,8 @@ pydantic-settings
 openai-whisper # Using OpenAI Whisper for ASR
 langchain
 langchain-community
-fpdf2
+# fpdf2 # Removed, replaced by xhtml2pdf
+xhtml2pdf
 soundfile # Needed for audio loading
 # alibabacloud_nls # Removed
 # nemo_toolkit[asr] # Removed, using Whisper instead

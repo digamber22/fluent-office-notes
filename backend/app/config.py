@@ -18,7 +18,7 @@ class Settings(BaseSettings):
 
     # Ollama settings
     OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "deepseek-r1:1.5b" # Changed default model
+    OLLAMA_MODEL: str = "gemma3:1b" # Changed default model
 
     # Add other settings if needed
 

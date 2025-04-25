@@ -1,5 +1,5 @@
 import datetime
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field # Import Field
 from typing import Optional, List
 from .models import MeetingStatus # Import the enum from models
 
@@ -10,12 +10,22 @@ class MeetingBase(BaseModel):
     Base schema for Meeting, containing common fields.
     """
     filename: Optional[str] = None
-    audio_file_path: Optional[str] = None # Add the path field
-    transcript: Optional[str] = None
-    summary: Optional[str] = None
-    action_items: Optional[str] = None # Keep as string for simplicity, could be List[str]
+    audio_file_path: Optional[str] = None 
+    transcript: Optional[str] = None # Original transcript
+    detected_language: Optional[str] = None # e.g., 'en', 'zh', 'es'
+    
+    # Language-specific fields
+    summary_en: Optional[str] = None
+    summary_zh: Optional[str] = None
+    action_items_en: Optional[List[str]] = Field(default_factory=list) # Default to empty list
+    action_items_zh: Optional[List[str]] = Field(default_factory=list) # Default to empty list
+    
     status: MeetingStatus = MeetingStatus.PENDING
     error_message: Optional[str] = None
+    
+    # Remove old generic fields if replaced by language-specific ones
+    # summary: Optional[str] = None 
+    # action_items: Optional[str] = None 
 
 class MeetingCreate(BaseModel):
     """

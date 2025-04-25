@@ -1,6 +1,6 @@
 import os
 import logging
-from typing import Optional
+from typing import Optional, Tuple # Import Tuple
 from sqlalchemy.orm import Session
 import torch # Whisper uses torch, keep the check
 
@@ -45,11 +45,11 @@ else:
 
 
 # --- Main Transcription Function ---
-def transcribe_audio(db: Session, meeting_id: int) -> Optional[str]:
+def transcribe_audio(db: Session, meeting_id: int) -> Optional[Tuple[str, str]]:
     """
     Transcribes the audio file associated with the meeting ID using OpenAI Whisper.
-    Updates the meeting record with the transcript or error status.
-    Returns the transcript text if successful, otherwise None.
+    Updates the meeting record with the transcript, detected language, or error status.
+    Returns a tuple (transcript_text, detected_language) if successful, otherwise None.
     """
     if whisper_model is None:
         logger.error("Whisper ASR model is not loaded. Cannot transcribe.")
@@ -70,17 +70,24 @@ def transcribe_audio(db: Session, meeting_id: int) -> Optional[str]:
 
     try:
         # Perform transcription using Whisper
-        # result is a dictionary containing the transcript and other info
-        result = whisper_model.transcribe(db_meeting.audio_file_path, fp16=torch.cuda.is_available()) # Use fp16 on GPU if available
-        transcript_text = result["text"]
+        # Perform transcription using Whisper
+        # result is a dictionary containing the transcript and other info, including language
+        result = whisper_model.transcribe(db_meeting.audio_file_path, fp16=torch.cuda.is_available()) 
+        transcript_text = result.get("text", "")
+        detected_language = result.get("language", "unknown") # Get detected language, default to 'unknown'
 
-        logger.info(f"Whisper transcription complete for meeting {meeting_id}.")
+        logger.info(f"Whisper transcription complete for meeting {meeting_id}. Detected language: {detected_language}")
 
-        # Update the meeting record
-        meeting_update = schemas.MeetingUpdate(transcript=transcript_text)
+        # Update the meeting record with transcript and language
+        meeting_update = schemas.MeetingUpdate(
+            transcript=transcript_text,
+            detected_language=detected_language
+        )
         crud.update_meeting(db, meeting_id, meeting_update)
-        crud.update_meeting_status(db, meeting_id, models.MeetingStatus.COMPLETED) # Update status to completed
-        return transcript_text
+        # Don't set status to COMPLETED here, summarization step will do that
+        # crud.update_meeting_status(db, meeting_id, models.MeetingStatus.COMPLETED) 
+        
+        return transcript_text, detected_language # Return both transcript and language
 
     except Exception as e:
         error_msg = f"Error during Whisper transcription for meeting {meeting_id}: {e}"

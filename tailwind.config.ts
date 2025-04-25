@@ -19,6 +19,20 @@ export default {
     },
     extend: {
       colors: {
+        // Add the new purple color scale
+        purple: {
+          50: "#F5ECFE",
+          100: "#E9D3FD",
+          200: "#D5ACFB",
+          300: "#BF80F9",
+          400: "#A855F7",
+          500: "#8D1FF4",
+          600: "#710AD1",
+          700: "#5708A1",
+          800: "#3A056B",
+          900: "#1D0336",
+          950: "#0D0118"
+        },
         border: 'hsl(var(--border))',
         input: 'hsl(var(--input))',
         ring: 'hsl(var(--ring))',

@@ -12,11 +12,17 @@ export interface Meeting {
   filename: string; // Renamed from title
   upload_time: string; // Keep as string, will format from backend datetime
   audio_file_path?: string | null;
-  transcript?: string | null;
-  summary?: string | null;
-  actionItems?: string[]; // Changed from string in backend, will parse
+  transcript?: string | null; // Original transcript
+  detected_language?: string | null;
+  summary_en?: string | null;
+  summary_zh?: string | null;
+  action_items_en?: string[]; // Will be parsed from JSON string
+  action_items_zh?: string[]; // Will be parsed from JSON string
   status: MeetingStatus;
   error_message?: string | null;
+  // Remove old generic fields
+  // summary?: string | null;
+  // actionItems?: string[]; 
 }
 
 // Define the UploadResponse type based on backend/app/schemas.py UploadResponse
@@ -41,17 +47,35 @@ const handleResponse = async (response: Response) => {
 
 // Helper function to transform backend data to frontend Meeting type
 const transformMeetingData = (backendMeeting: any): Meeting => {
-  // Parse action items string into an array (split by newline, filter empty lines)
-  const actionItemsArray = backendMeeting.action_items
-    ? backendMeeting.action_items.split('\n').filter((item: string) => item.trim() !== '')
-    : [];
+  // Helper to safely parse JSON string for action items
+  const parseActionItems = (jsonString: string | null | undefined): string[] => {
+    if (!jsonString) return [];
+    try {
+      const items = JSON.parse(jsonString);
+      return Array.isArray(items) ? items.map(String) : []; // Ensure it's an array of strings
+    } catch (e) {
+      console.error("Failed to parse action items JSON:", e);
+      return []; // Return empty array on parse error
+    }
+  };
 
   return {
-    ...backendMeeting,
-    id: String(backendMeeting.id), // Convert id to string
-    upload_time: new Date(backendMeeting.upload_time).toISOString(), // Keep ISO string or format as needed
-    filename: backendMeeting.filename || `Meeting ${backendMeeting.id}`, // Use filename, provide fallback
-    actionItems: actionItemsArray, // Use parsed array
+    // Spread backend data first
+    ...backendMeeting, 
+    // Override/transform specific fields
+    id: String(backendMeeting.id), 
+    upload_time: new Date(backendMeeting.upload_time).toISOString(), 
+    filename: backendMeeting.filename || `Meeting ${backendMeeting.id}`, 
+    // Parse action items from JSON strings
+    action_items_en: parseActionItems(backendMeeting.action_items_en), 
+    action_items_zh: parseActionItems(backendMeeting.action_items_zh),
+    // Ensure other fields are passed through correctly
+    transcript: backendMeeting.transcript,
+    detected_language: backendMeeting.detected_language,
+    summary_en: backendMeeting.summary_en,
+    summary_zh: backendMeeting.summary_zh,
+    status: backendMeeting.status,
+    error_message: backendMeeting.error_message,
   };
 };
 
@@ -106,5 +130,18 @@ export const api = {
     const response = await fetch(`${API_BASE_URL}/meetings/search/?query=${encodeURIComponent(query)}`);
     const data = await handleResponse(response);
     return data.map(transformMeetingData);
+  },
+
+  // Delete a meeting by ID
+  deleteMeeting: async (id: string): Promise<void> => {
+    const response = await fetch(`${API_BASE_URL}/meetings/${id}`, {
+      method: 'DELETE',
+    });
+    // Check if the response is ok, but don't necessarily need to parse JSON body for DELETE
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({ detail: response.statusText }));
+      throw new Error(errorData.detail || `HTTP error! status: ${response.status}`);
+    }
+    // No return value needed for successful delete
   }
 };
